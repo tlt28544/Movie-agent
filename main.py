@@ -55,8 +55,16 @@ def main() -> int:
 
     raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=30)
     score_filtered = [m for m in raw_candidates if (m.get("vote_average") or 0) >= 7.5]
-    candidates = [m for m in score_filtered if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
-    candidates = candidates[: args.limit]
+
+    target_count = max(args.limit, 2)
+    fresh_candidates = [m for m in score_filtered if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
+    candidates = fresh_candidates[:target_count]
+
+    if len(candidates) < target_count:
+        seen_tmdb_ids = {str(m.get("tmdb_id")) for m in candidates}
+        backfill = [m for m in score_filtered if str(m.get("tmdb_id")) not in seen_tmdb_ids]
+        need = target_count - len(candidates)
+        candidates.extend(backfill[:need])
 
     if not candidates:
         logger.info("no candidates")
@@ -75,7 +83,7 @@ def main() -> int:
         return 1
 
     subject = f"🎬 今日电影推荐 {today}"
-    html = render_email(today, movies_with_cards, today_movies[:30])
+    html = render_email(today, movies_with_cards, today_movies[:20])
 
     attachment_path = build_excel_report(today)
 
