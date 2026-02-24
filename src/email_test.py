@@ -18,12 +18,19 @@ if __name__ == "__main__":
                 "movie": {"title": "Demo Movie", "year": 2024, "url": "https://www.themoviedb.org"},
                 "analysis": {
                     "one_liner": "一部节奏紧凑、话题度高的院线片。",
+                    "recommendation": "口碑和热度都不错，适合本周观看。",
                     "why_now": ["热度攀升", "社交平台讨论多", "适合周末观影"],
                     "who_should_watch": ["喜欢悬疑", "想看话题片"],
-                    "who_should_avoid": ["不喜欢高压节奏"],
+                    "director_background": "导演以类型片见长，叙事节奏稳健。",
+                    "starring_cast": ["演员A", "演员B"],
+                    "movie_profile": "一部围绕家庭与真相展开的悬疑电影。",
                     "similar_titles": ["Movie A", "Movie B", "Movie C"],
                 },
             }
+        ],
+        [
+            {"rank": 1, "title": "Top Movie", "year": 2024, "vote_average": 7.8},
+            {"rank": 2, "title": "Top Movie 2", "year": 2023, "vote_average": 7.5},
         ],
     )
 

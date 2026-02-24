@@ -20,7 +20,7 @@ from src.utils import setup_env, setup_logging, today_str, yesterday_str
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--limit", type=int, default=1)
+    parser.add_argument("--limit", type=int, default=2)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -38,7 +38,7 @@ def main() -> int:
     yday = yesterday_str()
 
     try:
-        today_movies = get_trending_movies(limit=20)
+        today_movies = get_trending_movies(limit=30)
     except Exception as e:  # noqa: BLE001
         logger.exception("failed to fetch TMDB trending: %s", e)
         return 1
@@ -50,7 +50,7 @@ def main() -> int:
     upsert_daily_snapshot(today, "tmdb_trending", today_movies)
     yesterday_map = get_yesterday_ranks("tmdb_trending", yday)
 
-    raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=20)
+    raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=30)
     candidates = [m for m in raw_candidates if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
     candidates = candidates[: args.limit]
 
@@ -71,7 +71,7 @@ def main() -> int:
         return 1
 
     subject = f"🎬 今日电影推荐 {today}"
-    html = render_email(today, movies_with_cards)
+    html = render_email(today, movies_with_cards, today_movies[:20])
 
     if args.dry_run:
         logger.info("dry-run subject: %s", subject)

@@ -12,13 +12,15 @@ def pick_trending_candidates(today_movies: list[dict], yesterday_rank_map: dict[
         candidate = {**m, "new_entry": is_new, "rank_jump": jump}
         enriched.append(candidate)
 
+    high_jumpers = [m for m in enriched if not m["new_entry"] and m["rank_jump"] >= 5]
     new_entries = [m for m in enriched if m["new_entry"]]
-    rank_jumpers = [m for m in enriched if not m["new_entry"] and m["rank_jump"] > 0]
+    low_jumpers = [m for m in enriched if not m["new_entry"] and 0 < m["rank_jump"] < 5]
 
+    high_jumpers.sort(key=lambda x: x["rank_jump"], reverse=True)
     new_entries.sort(key=lambda x: x["rank"])
-    rank_jumpers.sort(key=lambda x: x["rank_jump"], reverse=True)
+    low_jumpers.sort(key=lambda x: x["rank_jump"], reverse=True)
 
-    prioritized = new_entries + rank_jumpers
+    prioritized = high_jumpers + new_entries + low_jumpers
     seen_ids = {m["tmdb_id"] for m in prioritized}
 
     # 候选不足时补齐榜单

@@ -21,22 +21,34 @@ def analyze_movie(movie: dict) -> dict:
         raise ValueError("DEEPSEEK_API_KEY is missing")
 
     prompt = f"""
-你是电影推荐编辑。请基于以下电影信息输出严格 JSON（不要 markdown，不要额外文字）。
+你是资深中文电影编辑。请基于以下电影信息输出严格 JSON（不要 markdown，不要额外文字）。
 字段必须包含：
 one_liner (str)
+recommendation (str)
 why_now (list[str])
 who_should_watch (list[str])
-who_should_avoid (list[str])
+director_background (str)
+starring_cast (list[str], 最多5个)
+movie_profile (str)
 similar_titles (list[str], 恰好3个)
 best_viewing_mode (str)
-risk_flags (list[str])
 tags (list[str])
+
+写作要求：
+- 结合评分、票数、热度、简介、导演、演员等信息撰写推荐。
+- 导演背景尽量基于给定信息做谨慎描述，不要编造具体奖项。
+- 不需要输出“避雷”内容。
 
 电影信息：
 - title: {movie.get('title')}
 - year: {movie.get('year')}
 - overview: {movie.get('overview')}
 - rank: {movie.get('rank')}
+- vote_average: {movie.get('vote_average')}
+- vote_count: {movie.get('vote_count')}
+- popularity: {movie.get('popularity')}
+- directors: {movie.get('directors')}
+- cast: {movie.get('cast')}
 """.strip()
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
@@ -59,12 +71,14 @@ tags (list[str])
 
             normalized = {
                 "one_liner": str(parsed.get("one_liner", "")).strip(),
+                "recommendation": str(parsed.get("recommendation", "")).strip(),
                 "why_now": _normalize_list(parsed.get("why_now")),
                 "who_should_watch": _normalize_list(parsed.get("who_should_watch")),
-                "who_should_avoid": _normalize_list(parsed.get("who_should_avoid")),
+                "director_background": str(parsed.get("director_background", "")).strip(),
+                "starring_cast": _normalize_list(parsed.get("starring_cast"))[:5],
+                "movie_profile": str(parsed.get("movie_profile", "")).strip(),
                 "similar_titles": _normalize_list(parsed.get("similar_titles"))[:3],
                 "best_viewing_mode": str(parsed.get("best_viewing_mode", "")).strip(),
-                "risk_flags": _normalize_list(parsed.get("risk_flags")),
                 "tags": _normalize_list(parsed.get("tags")),
             }
             while len(normalized["similar_titles"]) < 3:
