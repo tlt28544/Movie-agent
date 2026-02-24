@@ -7,6 +7,13 @@ from email.mime.text import MIMEText
 from src.constants import SMTP_HOST, SMTP_PORT
 
 
+def parse_recipients(to_email: str) -> list[str]:
+    recipients = [email.strip() for email in to_email.split(",") if email.strip()]
+    if not recipients:
+        raise ValueError("TO_EMAIL is missing or invalid")
+    return recipients
+
+
 def send_email(subject: str, html_body: str, to_email: str, attachments: list[str] | None = None) -> None:
     smtp_user = os.getenv("SMTP_USER", "").strip()
     smtp_password = os.getenv("SMTP_APP_PASSWORD", "").strip()
@@ -15,10 +22,12 @@ def send_email(subject: str, html_body: str, to_email: str, attachments: list[st
     if not smtp_user or not smtp_password:
         raise ValueError("SMTP_USER or SMTP_APP_PASSWORD is missing")
 
+    recipients = parse_recipients(to_email)
+
     msg = MIMEMultipart()
     msg["Subject"] = subject
     msg["From"] = from_email
-    msg["To"] = to_email
+    msg["To"] = ", ".join(recipients)
     msg.attach(MIMEText(html_body, "html", "utf-8"))
 
     for file_path in attachments or []:
@@ -36,4 +45,4 @@ def send_email(subject: str, html_body: str, to_email: str, attachments: list[st
 
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=30) as server:
         server.login(smtp_user, smtp_password)
-        server.sendmail(from_email, [to_email], msg.as_string())
+        server.sendmail(from_email, recipients, msg.as_string())

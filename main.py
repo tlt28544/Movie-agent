@@ -7,7 +7,7 @@ from src.analyzer_deepseek import analyze_movie
 from src.collector_tmdb import get_trending_movies
 from src.detector import pick_trending_candidates
 from src.email_template import render_email
-from src.emailer_smtp import send_email
+from src.emailer_smtp import parse_recipients, send_email
 from src.report_excel import build_excel_report
 from src.store_sqlite import (
     get_yesterday_ranks,
@@ -31,9 +31,13 @@ def main() -> int:
     logger = logging.getLogger("movie-agent")
 
     to_email = os.getenv("TO_EMAIL", "").strip()
-    if not to_email and not args.dry_run:
-        logger.error("TO_EMAIL is missing")
-        return 1
+    recipients: list[str] = []
+    if not args.dry_run:
+        try:
+            recipients = parse_recipients(to_email)
+        except ValueError:
+            logger.error("TO_EMAIL is missing or invalid")
+            return 1
 
     init_db()
     cleanup_old_data(retention_days=365)
@@ -98,7 +102,7 @@ def main() -> int:
         for item in movies_with_cards:
             m = item["movie"]
             log_sent(str(m.get("tmdb_id")), m.get("title", ""), m.get("year"), today)
-        logger.info("email sent successfully to %s", to_email)
+        logger.info("email sent successfully to %s", ", ".join(recipients))
         return 0
     except Exception as e:  # noqa: BLE001
         logger.exception("failed to send email: %s", e)
