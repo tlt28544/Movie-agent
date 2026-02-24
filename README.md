@@ -38,7 +38,7 @@ python -m src.email_test --preview
 ## GitHub Actions Secrets 清单
 - `TMDB_API_KEY`
 - `DEEPSEEK_API_KEY`
-- `TO_EMAIL`（支持逗号分隔多个收件人，如 `a@x.com,b@y.com`）
+- `TO_EMAIL`
 - `FROM_EMAIL`（可选）
 - `SMTP_USER`
 - `SMTP_APP_PASSWORD`
