@@ -116,3 +116,14 @@ def log_sent(tmdb_id: str, title: str, year: int | None, sent_date: str) -> None
     )
     conn.commit()
     conn.close()
+
+
+def cleanup_old_data(retention_days: int = 365) -> None:
+    cutoff = (datetime.now(ZoneInfo(TZ)) - timedelta(days=retention_days)).strftime("%Y-%m-%d")
+
+    conn = _connect()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM daily_snapshot WHERE snapshot_date < ?", (cutoff,))
+    cur.execute("DELETE FROM sent_log WHERE sent_date < ?", (cutoff,))
+    conn.commit()
+    conn.close()

@@ -12,6 +12,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Restore previous database artifact
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: daily.yml
+          name: movie-agent-db
+          path: data
+          if_no_artifact_found: warn
+          search_artifacts: true
+
+      - name: Prepare restored DB
+        run: |
+          if [ -f data/app.db/app.db ]; then
+            mv data/app.db/app.db data/app.db
+          fi
+          if [ ! -f data/app.db ]; then
+            mkdir -p data
+            touch data/app.db
+          fi
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -31,3 +50,11 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_APP_PASSWORD: ${{ secrets.SMTP_APP_PASSWORD }}
         run: python main.py --limit 2
+
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: movie-agent-db
+          path: data/app.db
+          retention-days: 365
+          overwrite: true
