@@ -15,9 +15,12 @@ def _normalize_list(v: Any, fallback: list[str] | None = None) -> list[str]:
     return fallback or []
 
 
-def _build_prompt(movie: dict) -> str:
-    # Keep prompt content unchanged by requirement.
-    return f"""
+def analyze_movie(movie: dict) -> dict:
+    api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("DEEPSEEK_API_KEY is missing")
+
+    prompt = f"""
 你是一位资深中文电影编辑。请基于下面的电影信息，仅输出严格 JSON（不要 markdown，不要额外说明文字）。
 The JSON must include:
 one_liner (str)
@@ -49,9 +52,8 @@ Movie details:
 - cast: {movie.get('cast')}
 """.strip()
 
-
-def _build_payload(prompt: str) -> dict:
-    return {
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    payload = {
         "model": DEEPSEEK_MODEL,
         "messages": [
             {"role": "system", "content": "You are a strict JSON generator."},
@@ -60,68 +62,29 @@ def _build_payload(prompt: str) -> dict:
         "temperature": 0.5,
     }
 
-
-def _extract_json_text(content: str) -> str:
-    text = content.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        if len(lines) >= 3:
-            lines = lines[1:]
-            if lines and lines[-1].strip().startswith("```"):
-                lines = lines[:-1]
-            text = "\n".join(lines).strip()
-    return text
-
-
-def _normalize_analysis(parsed: dict[str, Any]) -> dict:
-    normalized = {
-        "one_liner": str(parsed.get("one_liner", "")).strip(),
-        "recommendation": str(parsed.get("recommendation", "")).strip(),
-        "why_now": _normalize_list(parsed.get("why_now")),
-        "who_should_watch": _normalize_list(parsed.get("who_should_watch")),
-        "director_background": str(parsed.get("director_background", "")).strip(),
-        "starring_cast": _normalize_list(parsed.get("starring_cast"))[:5],
-        "movie_profile": str(parsed.get("movie_profile", "")).strip(),
-        "similar_titles": _normalize_list(parsed.get("similar_titles"))[:3],
-        "best_viewing_mode": str(parsed.get("best_viewing_mode", "")).strip(),
-        "tags": _normalize_list(parsed.get("tags")),
-    }
-
-    while len(normalized["similar_titles"]) < 3:
-        normalized["similar_titles"].append("N/A")
-
-    return normalized
-
-
-def _call_deepseek(api_key: str, payload: dict) -> dict[str, Any]:
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
-    response = requests.post(
-        f"{DEEPSEEK_BASE_URL}/chat/completions",
-        headers=headers,
-        json=payload,
-        timeout=45,
-    )
-    response.raise_for_status()
-    response_data = response.json()
-    content = response_data["choices"][0]["message"]["content"]
-    json_text = _extract_json_text(str(content))
-    return json.loads(json_text)
-
-
-def analyze_movie(movie: dict) -> dict:
-    api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
-    if not api_key:
-        raise ValueError("DEEPSEEK_API_KEY is missing")
-
-    prompt = _build_prompt(movie)
-    payload = _build_payload(prompt)
-
     last_error = None
     for _ in range(2):
         try:
-            parsed = _call_deepseek(api_key=api_key, payload=payload)
-            return _normalize_analysis(parsed)
+            resp = requests.post(f"{DEEPSEEK_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=45)
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            parsed = json.loads(content)
+
+            normalized = {
+                "one_liner": str(parsed.get("one_liner", "")).strip(),
+                "recommendation": str(parsed.get("recommendation", "")).strip(),
+                "why_now": _normalize_list(parsed.get("why_now")),
+                "who_should_watch": _normalize_list(parsed.get("who_should_watch")),
+                "director_background": str(parsed.get("director_background", "")).strip(),
+                "starring_cast": _normalize_list(parsed.get("starring_cast"))[:5],
+                "movie_profile": str(parsed.get("movie_profile", "")).strip(),
+                "similar_titles": _normalize_list(parsed.get("similar_titles"))[:3],
+                "best_viewing_mode": str(parsed.get("best_viewing_mode", "")).strip(),
+                "tags": _normalize_list(parsed.get("tags")),
+            }
+            while len(normalized["similar_titles"]) < 3:
+                normalized["similar_titles"].append("N/A")
+            return normalized
         except Exception as e:  # noqa: BLE001
             last_error = e
-
     raise RuntimeError(f"DeepSeek analyze failed after retries: {last_error}")
