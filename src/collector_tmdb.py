@@ -7,7 +7,7 @@ import requests
 from src.constants import TZ
 
 
-def get_trending_movies(limit: int = 20) -> list[dict]:
+def get_trending_movies(limit: int = 30) -> list[dict]:
     api_key = os.getenv("TMDB_API_KEY", "").strip()
     if not api_key:
         raise ValueError("TMDB_API_KEY is missing")
