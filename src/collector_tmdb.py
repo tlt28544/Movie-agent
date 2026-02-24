@@ -29,16 +29,42 @@ def get_trending_movies(limit: int = 20) -> list[dict]:
         release_date = item.get("release_date") or ""
         year = int(release_date[:4]) if len(release_date) >= 4 and release_date[:4].isdigit() else None
         tmdb_id = str(item.get("id", ""))
+        directors: list[str] = []
+        cast: list[str] = []
+        if tmdb_id:
+            try:
+                credits_resp = requests.get(
+                    f"https://api.themoviedb.org/3/movie/{tmdb_id}/credits",
+                    params={"api_key": api_key, "language": "en-US"},
+                    timeout=20,
+                )
+                credits_resp.raise_for_status()
+                credits = credits_resp.json()
+                directors = [
+                    c.get("name", "")
+                    for c in credits.get("crew", [])
+                    if c.get("job") == "Director" and c.get("name")
+                ][:2]
+                cast = [c.get("name", "") for c in credits.get("cast", []) if c.get("name")][:5]
+            except requests.RequestException:
+                directors = []
+                cast = []
+
         movies.append(
             {
                 "title": item.get("title") or item.get("name") or "Unknown",
                 "year": year,
                 "tmdb_id": tmdb_id,
                 "overview": item.get("overview") or "",
+                "vote_average": item.get("vote_average"),
+                "vote_count": item.get("vote_count"),
+                "popularity": item.get("popularity"),
                 "url": f"https://www.themoviedb.org/movie/{tmdb_id}" if tmdb_id else "",
                 "rank": idx,
                 "snapshot_date": snapshot_date,
                 "source": "tmdb_trending",
+                "directors": directors,
+                "cast": cast,
             }
         )
     return movies
