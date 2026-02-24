@@ -21,7 +21,7 @@ def analyze_movie(movie: dict) -> dict:
         raise ValueError("DEEPSEEK_API_KEY is missing")
 
     prompt = f"""
-You are a senior English-language movie editor. Based on the movie details below, output strict JSON only (no markdown, no extra text).
+你是一位资深中文电影编辑。请基于下面的电影信息，仅输出严格 JSON（不要 markdown，不要额外说明文字）。
 The JSON must include:
 one_liner (str)
 recommendation (str)
@@ -35,10 +35,10 @@ best_viewing_mode (str)
 tags (list[str])
 
 Writing requirements:
-- Write all text fields in natural English.
-- Use rating, vote count, popularity, overview, director, and cast details to make the recommendation.
-- Keep director background grounded in provided info; do not fabricate specific awards.
-- Do not include warning/avoidance sections.
+- 所有文本字段必须使用自然、地道的中文。
+- 推荐理由需结合评分、投票数、热度、剧情简介、导演与演员信息。
+- 导演背景应基于提供信息，禁止编造具体奖项。
+- 不要包含“避雷”或“不推荐人群”等负面劝退段落。
 
 Movie details:
 - title: {movie.get('title')}
