@@ -22,7 +22,7 @@ from src.utils import setup_env, setup_logging, today_str, yesterday_str
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--limit", type=int, default=2)
+    parser.add_argument("--limit", type=int, default=1)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -41,7 +41,7 @@ def main() -> int:
     yday = yesterday_str()
 
     try:
-        today_movies = get_trending_movies(limit=30)
+        today_movies = get_trending_movies(limit=20)
     except Exception as e:  # noqa: BLE001
         logger.exception("failed to fetch TMDB trending: %s", e)
         return 1
@@ -53,10 +53,10 @@ def main() -> int:
     upsert_daily_snapshot(today, "tmdb_trending", today_movies)
     yesterday_map = get_yesterday_ranks("tmdb_trending", yday)
 
-    raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=30)
+    raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=20)
     score_filtered = [m for m in raw_candidates if (m.get("vote_average") or 0) >= 7.5]
 
-    target_count = max(args.limit, 2)
+    target_count = 1
     fresh_candidates = [m for m in score_filtered if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
     candidates = fresh_candidates[:target_count]
 
