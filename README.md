@@ -38,19 +38,21 @@ python -m src.email_test --preview
 ## GitHub Actions Secrets 清单
 - `TMDB_API_KEY`
 - `ARK_API_KEY`
+- `ARK_ENDPOINT_ID`（推荐，填写你在火山引擎 Ark 控制台创建的推理接入点 ID，如 `ep-xxxx`）
 - `TO_EMAIL`
 - `FROM_EMAIL`（可选）
 - `SMTP_USER`
 - `SMTP_APP_PASSWORD`
 - （已内置）时区 `Asia/Singapore`
 - （已内置）SMTP 主机 `smtp.gmail.com`，端口 `465`
-- （已内置）Ark Base URL `https://ark.cn-beijing.volces.com/api/v3`
-- （已内置）Ark Model `doubao-seed-1-6-250615`（默认开启 web_search）
+- （可选覆盖）Ark Base URL `ARK_BASE_URL`，默认 `https://ark.cn-beijing.volces.com/api/v3`
+- （兼容）`ARK_MODEL_WEBSEARCH` 仍可使用，但建议优先配置 `ARK_ENDPOINT_ID`
 
 ## 常见错误
 - **TMDB key 无效**：检查 `TMDB_API_KEY` 是否正确、是否有 API 访问权限。
 - **SMTP app password 失败**：Gmail 必须使用 App Password，普通密码无法 SMTP 登录。
 - **Ark 返回非 JSON**：模型偶发输出非严格 JSON，程序会自动重试一次；仍失败则退出并报错，不发送空邮件。
+- **Ark 400 参数错误（tools/model）**：请优先检查 `ARK_ENDPOINT_ID` 是否是有效 `ep-` 接入点；程序已在 `web_search tools` 不可用时自动降级为无 tools 请求。
 
 
 ## 数据保留与 Artifact
