@@ -56,7 +56,7 @@ def main() -> int:
     raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=20)
     score_filtered = [m for m in raw_candidates if (m.get("vote_average") or 0) >= 7.5]
 
-    target_count = 1
+    target_count = max(1, args.limit)
     fresh_candidates = [m for m in score_filtered if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
     candidates = fresh_candidates[:target_count]
 
@@ -79,7 +79,7 @@ def main() -> int:
             logger.error("failed to analyze %s: %s", m.get("title"), e)
 
     if not movies_with_cards:
-        logger.error("all Ark analyses failed")
+        logger.error("all DeepSeek analyses failed")
         return 1
 
     subject = f"🎬 今日电影推荐 {today}"
