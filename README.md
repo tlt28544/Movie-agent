@@ -1,12 +1,12 @@
 # movie-agent
 
-movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 TMDB Trending 榜单，识别新进榜/飙升电影，调用 DeepSeek 生成结构化推荐理由，再通过 Gmail SMTP 发送简洁可读的推荐邮件。
+movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 TMDB Trending 榜单，识别新进榜/飙升电影，调用火山引擎 Ark（豆包）生成结构化推荐理由，再通过 Gmail SMTP 发送简洁可读的推荐邮件。
 
 ## 架构
 - `src/collector_tmdb.py`: 拉取 TMDB Trending 电影榜单。
 - `src/store_sqlite.py`: 持久化每日榜单与已发送记录（SQLite 单文件 `data/app.db`）。
 - `src/detector.py`: 根据“新进榜 + 名次飙升”筛选候选。
-- `src/analyzer_deepseek.py`: 调用 DeepSeek 生成结构化推荐卡片。
+- `src/analyzer_ark.py`: 调用火山引擎 Ark（豆包）+ web_search 生成结构化推荐卡片。
 - `src/email_template.py`: 渲染移动端可读 HTML 邮件。
 - `src/report_excel.py`: 生成电影数据 Excel（`daily_snapshot` 与 `sent_log`）供邮件附件与审计。
 - `src/emailer_smtp.py`: 使用 Gmail SMTP 发送邮件（附带 Excel 数据附件）。
@@ -37,20 +37,20 @@ python -m src.email_test --preview
 
 ## GitHub Actions Secrets 清单
 - `TMDB_API_KEY`
-- `DEEPSEEK_API_KEY`
+- `ARK_API_KEY`
 - `TO_EMAIL`
 - `FROM_EMAIL`（可选）
 - `SMTP_USER`
 - `SMTP_APP_PASSWORD`
 - （已内置）时区 `Asia/Singapore`
 - （已内置）SMTP 主机 `smtp.gmail.com`，端口 `465`
-- （已内置）DeepSeek Base URL `https://api.deepseek.com`
-- （已内置）DeepSeek Model `deepseek-reasoner`
+- （已内置）Ark Base URL `https://ark.cn-beijing.volces.com/api/v3`
+- （已内置）Ark Model `doubao-seed-1-6-250615`（默认开启 web_search）
 
 ## 常见错误
 - **TMDB key 无效**：检查 `TMDB_API_KEY` 是否正确、是否有 API 访问权限。
 - **SMTP app password 失败**：Gmail 必须使用 App Password，普通密码无法 SMTP 登录。
-- **DeepSeek 返回非 JSON**：模型偶发输出非严格 JSON，程序会自动重试一次；仍失败则退出并报错，不发送空邮件。
+- **Ark 返回非 JSON**：模型偶发输出非严格 JSON，程序会自动重试一次；仍失败则退出并报错，不发送空邮件。
 
 
 ## 数据保留与 Artifact
