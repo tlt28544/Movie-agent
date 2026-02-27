@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-from src.analyzer_deepseek import analyze_movie
+from src.analyzer_ark import analyze_movie
 from src.collector_tmdb import get_trending_movies
 from src.detector import pick_trending_candidates
 from src.email_template import render_email
@@ -79,7 +79,7 @@ def main() -> int:
             logger.error("failed to analyze %s: %s", m.get("title"), e)
 
     if not movies_with_cards:
-        logger.error("all DeepSeek analyses failed")
+        logger.error("all Ark analyses failed")
         return 1
 
     subject = f"🎬 今日电影推荐 {today}"
