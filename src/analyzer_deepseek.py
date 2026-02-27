@@ -4,7 +4,7 @@ from typing import Any
 
 import requests
 
-from src.constants import ARK_BASE_URL, ARK_MODEL_WEBSEARCH
+from src.constants import DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
 
 
 def _normalize_list(v: Any, fallback: list[str] | None = None) -> list[str]:
@@ -16,9 +16,9 @@ def _normalize_list(v: Any, fallback: list[str] | None = None) -> list[str]:
 
 
 def analyze_movie(movie: dict) -> dict:
-    api_key = os.getenv("ARK_API_KEY", "").strip()
+    api_key = os.getenv("DEEPSEEK_API_KEY", "").strip()
     if not api_key:
-        raise ValueError("ARK_API_KEY is missing")
+        raise ValueError("DEEPSEEK_API_KEY is missing")
 
     prompt = f"""
 你是一位资深中文电影编辑。请基于下面的电影信息，仅输出严格 JSON（不要 markdown，不要额外说明文字）。
@@ -39,7 +39,6 @@ Writing requirements:
 - 推荐理由需结合评分、投票数、热度、剧情简介、导演与演员信息。
 - 导演背景应基于提供信息，禁止编造具体奖项。
 - 不要包含“避雷”或“不推荐人群”等负面劝退段落。
-- 可结合实时 web_search 信息补充口碑/话题热度，但禁止编造来源或不确定结论。
 
 Movie details:
 - title: {movie.get('title')}
@@ -55,19 +54,18 @@ Movie details:
 
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
-        "model": ARK_MODEL_WEBSEARCH,
+        "model": DEEPSEEK_MODEL,
         "messages": [
             {"role": "system", "content": "You are a strict JSON generator."},
             {"role": "user", "content": prompt},
         ],
         "temperature": 0.5,
-        "tools": [{"type": "web_search", "max_keyword": 2}],
     }
 
     last_error = None
     for _ in range(2):
         try:
-            resp = requests.post(f"{ARK_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=60)
+            resp = requests.post(f"{DEEPSEEK_BASE_URL}/chat/completions", headers=headers, json=payload, timeout=45)
             resp.raise_for_status()
             content = resp.json()["choices"][0]["message"]["content"].strip()
             parsed = json.loads(content)
@@ -89,4 +87,4 @@ Movie details:
             return normalized
         except Exception as e:  # noqa: BLE001
             last_error = e
-    raise RuntimeError(f"Ark analyze failed after retries: {last_error}")
+    raise RuntimeError(f"DeepSeek analyze failed after retries: {last_error}")
