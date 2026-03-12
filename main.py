@@ -23,6 +23,12 @@ from src.utils import setup_env, setup_logging, today_str, yesterday_str
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=1)
+    parser.add_argument(
+        "--chart",
+        default="trending",
+        choices=["trending", "top_rated", "popular", "classic"],
+        help="TMDB 榜单来源：trending(默认)、top_rated、popular、classic(偏经典高分)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -41,17 +47,18 @@ def main() -> int:
     yday = yesterday_str()
 
     try:
-        today_movies = get_trending_movies(limit=20)
+        today_movies = get_trending_movies(limit=20, chart=args.chart)
     except Exception as e:  # noqa: BLE001
-        logger.exception("failed to fetch TMDB trending: %s", e)
+        logger.exception("failed to fetch TMDB chart(%s): %s", args.chart, e)
         return 1
 
     if not today_movies:
-        logger.error("TMDB returned empty list")
+        logger.error("TMDB chart(%s) returned empty list", args.chart)
         return 1
 
-    upsert_daily_snapshot(today, "tmdb_trending", today_movies)
-    yesterday_map = get_yesterday_ranks("tmdb_trending", yday)
+    source = f"tmdb_{args.chart}"
+    upsert_daily_snapshot(today, source, today_movies)
+    yesterday_map = get_yesterday_ranks(source, yday)
 
     raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=20)
     score_filtered = [m for m in raw_candidates if (m.get("vote_average") or 0) >= 7.5]
