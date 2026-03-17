@@ -3,7 +3,7 @@
 movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 TMDB Trending 榜单，识别新进榜/飙升电影，调用火山引擎 Ark（豆包）生成结构化推荐理由，再通过 Gmail SMTP 发送简洁可读的推荐邮件。
 
 ## 架构
-- `src/collector_tmdb.py`: 拉取 TMDB 榜单（classic / trending / top_rated / popular / upcoming）。
+- `src/collector_tmdb.py`: 拉取 TMDB 榜单（trending / top_rated / popular / classic）。
 - `src/store_sqlite.py`: 持久化每日榜单与已发送记录（SQLite 单文件 `data/app.db`）。
 - `src/detector.py`: 根据“新进榜 + 名次飙升”筛选候选。
 - `src/analyzer_ark.py`: 调用火山引擎 Ark（豆包）+ web_search 生成结构化推荐卡片。
@@ -25,11 +25,11 @@ movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 T
    ```
 3. 运行主流程
    ```bash
-   # 默认: classic（偏经典高分）
+   # 默认: trending（偏新）
    python main.py --limit 1
 
-   # 选择 upcoming（即将上映）
-   python main.py --limit 1 --chart upcoming
+   # 更经典的高分榜单
+   python main.py --limit 1 --chart classic
    ```
 
 ## SMTP 测试命令

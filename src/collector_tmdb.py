@@ -8,7 +8,7 @@ import requests
 from src.constants import TZ
 
 
-SUPPORTED_CHARTS = {"trending", "top_rated", "popular", "classic", "upcoming"}
+SUPPORTED_CHARTS = {"trending", "top_rated", "popular", "classic"}
 
 
 def _fetch_credits(tmdb_id: str, api_key: str) -> tuple[list[str], list[str]]:
@@ -51,7 +51,7 @@ def get_trending_movies(limit: int = 20, chart: str = "trending") -> list[dict]:
     elif chart == "popular":
         url = "https://api.themoviedb.org/3/movie/popular"
         params = {"api_key": api_key, "language": "en-US", "page": 1, "region": "US"}
-    elif chart == "classic":
+    else:
         # 更偏“经典”的榜单：老片 + 口碑 + 足够样本数
         url = "https://api.themoviedb.org/3/discover/movie"
         params = {
@@ -63,13 +63,6 @@ def get_trending_movies(limit: int = 20, chart: str = "trending") -> list[dict]:
             "page": 1,
             "without_genres": "99",  # 排除纪录片
         }
-
-    elif chart == "upcoming":
-        # 避免过新的“今日热榜”，切到即将上映榜单并要求已有一定关注度
-        url = "https://api.themoviedb.org/3/movie/upcoming"
-        params = {"api_key": api_key, "language": "en-US", "page": 1, "region": "US"}
-    else:
-        raise ValueError(f"unsupported chart: {chart}")
 
     resp = requests.get(
         url,
