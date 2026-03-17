@@ -6,7 +6,7 @@ from src.utils import setup_env
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--chart", default="trending", choices=["trending", "top_rated", "popular", "classic"])
+    parser.add_argument("--chart", default="classic", choices=["trending", "top_rated", "popular", "classic", "upcoming"])
     args = parser.parse_args()
 
     setup_env()
