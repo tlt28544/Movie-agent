@@ -15,7 +15,7 @@ from src.store_sqlite import (
     log_sent,
     upsert_daily_snapshot,
     cleanup_old_data,
-    was_sent_recently,
+    was_sent_before,
 )
 from src.utils import setup_env, setup_logging, today_str, yesterday_str
 
@@ -25,9 +25,9 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=1)
     parser.add_argument(
         "--chart",
-        default="trending",
-        choices=["trending", "top_rated", "popular", "classic"],
-        help="TMDB 榜单来源：trending(默认)、top_rated、popular、classic(偏经典高分)",
+        default="classic",
+        choices=["trending", "top_rated", "popular", "classic", "upcoming"],
+        help="TMDB 榜单来源：classic(默认，偏经典高分)、trending、top_rated、popular、upcoming",
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -63,15 +63,9 @@ def main() -> int:
     raw_candidates = pick_trending_candidates(today_movies, yesterday_map, limit=20)
     score_filtered = [m for m in raw_candidates if (m.get("vote_average") or 0) >= 7.5]
 
-    target_count = 1
-    fresh_candidates = [m for m in score_filtered if not was_sent_recently(str(m.get("tmdb_id")), days=7)]
+    target_count = max(1, args.limit)
+    fresh_candidates = [m for m in score_filtered if not was_sent_before(str(m.get("tmdb_id")))]
     candidates = fresh_candidates[:target_count]
-
-    if len(candidates) < target_count:
-        seen_tmdb_ids = {str(m.get("tmdb_id")) for m in candidates}
-        backfill = [m for m in score_filtered if str(m.get("tmdb_id")) not in seen_tmdb_ids]
-        need = target_count - len(candidates)
-        candidates.extend(backfill[:need])
 
     if not candidates:
         logger.info("no candidates")
