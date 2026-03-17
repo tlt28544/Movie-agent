@@ -8,7 +8,6 @@ from src.collector_tmdb import get_trending_movies
 from src.detector import pick_trending_candidates
 from src.email_template import render_email
 from src.emailer_smtp import send_email
-from src.report_excel import build_excel_report
 from src.store_sqlite import (
     get_yesterday_ranks,
     init_db,
@@ -92,16 +91,14 @@ def main() -> int:
     subject = f"🎬 今日电影推荐 {today}"
     html = render_email(today, movies_with_cards, today_movies[:20])
 
-    attachment_path = build_excel_report(today)
-
     if args.dry_run:
         logger.info("dry-run subject: %s", subject)
         logger.info("dry-run candidates: %s", [x['movie']['title'] for x in movies_with_cards])
-        logger.info("dry-run attachment: %s", attachment_path)
+        logger.info("dry-run email mode: no attachments")
         return 0
 
     try:
-        send_email(subject, html, to_email, attachments=[attachment_path])
+        send_email(subject, html, to_email)
         for item in movies_with_cards:
             m = item["movie"]
             log_sent(str(m.get("tmdb_id")), m.get("title", ""), m.get("year"), today)
