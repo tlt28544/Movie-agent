@@ -1,9 +1,9 @@
-name: Daily Movie Agent
+name: Movie Agent (Every 2 Days)
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 1 * * *" # 09:00 Asia/Singapore (UTC+8)
+    - cron: "0 1 */2 * *" # 09:00 Asia/Singapore (UTC+8), every 2 days
 
 jobs:
   run-agent:

@@ -1,6 +1,6 @@
 # movie-agent
 
-movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 TMDB Trending 榜单，识别新进榜/飙升电影，调用火山引擎 Ark（豆包）生成结构化推荐理由，再通过 Gmail SMTP 发送简洁可读的推荐邮件。
+movie-agent 是一个可定时运行的电影推荐 Agent：它会抓取 TMDB Trending 榜单，识别新进榜/飙升电影，调用火山引擎 Ark（豆包）生成结构化推荐理由，再通过 Gmail SMTP 发送简洁可读的推荐邮件（无附件）。
 
 ## 架构
 - `src/collector_tmdb.py`: 拉取 TMDB 榜单（trending / top_rated / popular / classic）。
@@ -8,8 +8,8 @@ movie-agent 是一个可定时运行的每日电影推荐 Agent：它会抓取 T
 - `src/detector.py`: 根据“新进榜 + 名次飙升”筛选候选。
 - `src/analyzer_ark.py`: 调用火山引擎 Ark（豆包）+ web_search 生成结构化推荐卡片。
 - `src/email_template.py`: 渲染移动端可读 HTML 邮件。
-- `src/report_excel.py`: 生成电影数据 Excel（`daily_snapshot` 与 `sent_log`）供邮件附件与审计。
-- `src/emailer_smtp.py`: 使用 Gmail SMTP 发送邮件（附带 Excel 数据附件）。
+- `src/report_excel.py`: 可选生成电影数据 Excel（`daily_snapshot` 与 `sent_log`）用于本地审计。
+- `src/emailer_smtp.py`: 使用 Gmail SMTP 发送 HTML 邮件（不附带附件）。
 - `main.py`: 端到端流程编排，支持 `--limit` 与 `--dry-run`。
 - `.github/workflows/daily.yml`: GitHub Actions 定时 + 手动触发。
 
