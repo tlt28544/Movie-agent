@@ -104,22 +104,6 @@ def was_sent_recently(tmdb_id: str, days: int = 7) -> bool:
     return found
 
 
-def was_sent_before(tmdb_id: str) -> bool:
-    conn = _connect()
-    cur = conn.cursor()
-    cur.execute(
-        """
-        SELECT 1 FROM sent_log
-        WHERE tmdb_id = ?
-        LIMIT 1
-        """,
-        (tmdb_id,),
-    )
-    found = cur.fetchone() is not None
-    conn.close()
-    return found
-
-
 def log_sent(tmdb_id: str, title: str, year: int | None, sent_date: str) -> None:
     conn = _connect()
     cur = conn.cursor()
